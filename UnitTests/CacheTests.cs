@@ -162,6 +162,43 @@ namespace UnitTests
         }
 
         [TestMethod, TestCategory("Cache")]
+        public void RemoveItem()
+        {
+            var cache = new LruCache<string, TestData>(10);
+            var data = new TestData
+            {
+                TestValue1 = "null",
+                TestValue2 = "null",
+            };
+                
+            cache.SetPreRemoveDataMethod(value =>
+            {
+                data.TestValue1 = value.TestValue1;
+                data.TestValue2 = value.TestValue2;
+                return true;
+            });
+            
+            cache.AddOrUpdate("1", new TestData
+            {
+                TestValue1 = "10",
+                TestValue2 = "20"
+            });
+            cache.AddOrUpdate("2", new TestData
+            {
+                TestValue1 = "30",
+                TestValue2 = "40"
+            });
+
+            cache.Remove("1");
+            Assert.Equals("10", data.TestValue1);
+            Assert.Equals("20", data.TestValue2);
+            
+            cache.Remove("2");
+            Assert.Equals("30", data.TestValue1);
+            Assert.Equals("40", data.TestValue2);
+        }
+
+        [TestMethod, TestCategory("Cache")]
         public void UpdateItem()
         {
             var cache = new LruCache<string, TestData>(10);

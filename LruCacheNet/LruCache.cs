@@ -24,6 +24,7 @@ namespace LruCacheNet
         private object _lock;
         private UpdateDataMethod _updateMethod;
         private CreateCopyMethod _createMethod;
+        private PreRemoveDataMethod _removeDataMethod;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LruCache{TKey,TValue}"/> class with the default size of 1000 items
@@ -66,6 +67,14 @@ namespace LruCacheNet
         /// <param name="data">Data to copy</param>
         /// <returns>New copy of data</returns>
         public delegate TValue CreateCopyMethod(TValue data);
+
+        /// <summary>
+        /// A method to callback with a data item of an item to remove from the cache 
+        /// </summary>
+        /// <param name="data">Data to delete</param>
+        /// <returns>True if callback is success, false if it was failed</returns>
+        public delegate bool PreRemoveDataMethod(TValue data);
+
 
         /// <summary>
         /// Event fired when the contents of the cache change
@@ -148,7 +157,16 @@ namespace LruCacheNet
         {
             _createMethod = method;
         }
-
+        
+        /// <summary>
+        /// Sets the method to call when before data remove in the cache
+        /// </summary>
+        /// <param name="method">Copy method to call</param>
+        public void SetPreRemoveDataMethod(PreRemoveDataMethod method)
+        {
+            _removeDataMethod = method;
+        }
+        
         /// <summary>
         /// Adds an item to the cache or updates its values if already in the cache
         /// If the item already existed in the cache it will also be moved to the front
@@ -513,6 +531,7 @@ namespace LruCacheNet
         /// <param name="node">Node to remove</param>
         private void RemoveNodeFromList(Node<TKey, TValue> node)
         {
+            _removeDataMethod?.Invoke(node.Value);
             _data.Remove(node.Key);
             if (node.Previous != null)
             {
